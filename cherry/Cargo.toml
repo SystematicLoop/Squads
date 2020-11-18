@@ -1,0 +1,28 @@
+[package]
+name = "cherry"
+version = "0.1.0"
+authors = ["Bailey Dakota Johnson <SystematicLoop@gmail.com>"]
+edition = "2018"
+description = "An engine for terminal-like applications."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.blueberry]
+path = "../blueberry"
+
+[dependencies.gl]
+version = "0.14.0"
+
+[dependencies.image]
+version = "0.23.11"
+
+[dependencies.sdl2]
+version = "0.34.3"
+features = ["bundled", "static-link"]
+
+[dependencies.serde]
+version = "1.0.117"
+features = ["serde_derive"]
+
+[dependencies.serde_json]
+version = "1.0.59"

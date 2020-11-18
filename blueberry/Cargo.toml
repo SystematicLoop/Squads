@@ -1,0 +1,10 @@
+[package]
+name = "blueberry"
+version = "0.1.0"
+authors = ["Bailey Dakota Johnson <SystematicLoop@gmail.com>"]
+edition = "2018"
+description = "A general-purpose mathematics library for use with Cherry Engine."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
