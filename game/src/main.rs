@@ -16,8 +16,6 @@ use gui::menu::{
 use unit::Unit;
 
 pub struct Game {
-    pub state: GameState,
-
     // World
     pub units: Vec<Unit>,
 
@@ -26,10 +24,23 @@ pub struct Game {
     pub selectable: Vec<u32>,
 
     // Menus
-    pub item_index: usize,
-    pub item_count: usize,
-    pub commands_menu: Menu<Commands>,
-    pub select_menu: Menu<Select>,
+    pub menus: Vec<Menu<MenuData>>,
+    pub menu_id: usize,
+    pub item_id: usize,
+    pub menu_changed: bool,
+    pub commands_menu_id: usize,
+    pub select_menu_id: usize,
+}
+
+
+impl Game {
+    pub fn change_menu(&mut self, menu_id: usize) {
+        if self.menu_id != menu_id {
+            self.menu_id = menu_id;
+            self.item_id = 0;
+            self.menu_changed = true;
+        }
+    }
 }
 
 impl Cherry for Game {
@@ -43,123 +54,105 @@ impl Cherry for Game {
         engine.set_fg(Colour::new(16, 16, 16));
         engine.draw_border(0, 0, 60, 40);
 
-        // Input
-        if engine.key(Key::Up).just_down {
-            if self.item_count != 0 && self.item_index != 0 {
-                self.item_index -= 1;
-            }
-        }
+        // Update menu.
+        if self.menu_changed {
+            self.menu_changed = false;
 
-        if engine.key(Key::Down).just_down {
-            if self.item_count != 0 && self.item_index < self.item_count - 1 {
-                self.item_index += 1;
-            }
-        }
-
-        // Update data caches.
-        self.selectable.clear();
-
-        for unit in &self.units {
-            if unit.faction == 0 && unit.health != 0 {
-                self.selectable.push(unit.id);
-            }
-        }
-
-        if let Some(id) = self.selected_unit {
-            let unit = &self.units[id as usize];
-            engine.set_fg(Colour::VERY_DARK_CYAN);
-            engine.draw_str(20, 1, &format!("Selected: {}", unit.name));
-        }
-
-        // Handle state.
-        match self.state {
-            GameState::CommandsMenu => {
-                // Validate commands menu.
-                self.commands_menu.clear();
-
-                if self.selectable.len() != 0 {
-                    self.commands_menu.add("Select", Commands::Select);
-                }
-
-                self.commands_menu.add("End Turn", Commands::EndTurn);
-                self.item_count = self.commands_menu.len();
-
-                // Draw.
-                draw_menu(engine, 1, 1, &self.commands_menu, self.item_index);
-
-                // Input.
-                if engine.key(Key::Enter).just_down {
-                    let item = self.commands_menu.get(self.item_index).unwrap();
-                    let command = item.data();
-                    match command {
-                        Commands::Select => {
-                            self.state = GameState::SelectMenu;
-                            self.item_index = 0;
-                        }
-                        Commands::Attack => {}
-                        Commands::Move => {}
-                        Commands::EndTurn => {}
+            if self.menu_id == self.commands_menu_id {
+                // Update selectable units.
+                self.selectable.clear();
+    
+                for unit in &self.units {
+                    if unit.faction == 0 && unit.health != 0 {
+                        self.selectable.push(unit.id);
                     }
                 }
-            }
 
-            GameState::SelectMenu => {
-                // Set menu items.
-                self.select_menu.clear();
+                // Update menu items.
+                let menu = &mut self.menus[self.commands_menu_id];
+                menu.clear();
+                
+                if self.selectable.len() != 0 {
+                    menu.add("Select", MenuData::ChangeMenu { id: self.select_menu_id });
+                }
+
+                menu.add("End Turn", MenuData::Empty);
+            }
+    
+            if self.menu_id == self.select_menu_id {
+                // Update menu items.
+                let menu = &mut self.menus[self.select_menu_id];
+                menu.clear();
 
                 for id in &self.selectable {
                     let unit = &self.units[*id as usize];
-                    self.select_menu.add(&unit.name, Select::Unit { id: *id });
+                    menu.add(&unit.name, MenuData::SelectUnit { id: *id });
                 }
 
-                self.item_count = self.select_menu.len();
+                menu.add("Back", MenuData::ChangeMenu { id: self.commands_menu_id });
+            }
+        }
 
-                // Draw.
-                draw_menu(engine, 1, 1, &self.select_menu, self.item_index);
-                
-                // Input.
-                if engine.key(Key::Enter).just_down {
-                    let item = self.select_menu.get(self.item_index).unwrap();
-                    match item.data() {
-                        Select::Unit { id } => {
-                            self.state = GameState::CommandsMenu;
-                            self.selected_unit = Some(*id);
-                            self.item_index = 0;
-                        }
+        // Draw menu.
+        let menu = &self.menus[self.menu_id];
+        draw_menu(engine, 1, 1, &menu, self.item_id);
+
+        // Input.
+        if engine.key(Key::Up).just_down {
+            self.item_id = self.item_id.saturating_sub(1);
+        }
+
+        if engine.key(Key::Down).just_down {
+            self.item_id = (self.item_id + 1).min(menu.len());
+        }
+
+        if engine.key(Key::Enter).just_down {
+            if let Some(item) = menu.get(self.item_id) {
+                let data = item.data().clone();
+                match data {
+                    MenuData::ChangeMenu { id } => {
+                        self.change_menu(id);
                     }
+                    MenuData::SelectUnit { id } => {
+                        self.selected_unit = Some(id);
+                        self.change_menu(self.commands_menu_id);
+                    }
+                    MenuData::EndTurn => {}
+                    MenuData::Empty => {}
                 }
             }
         }
     }
 }
 
-pub enum GameState {
-    CommandsMenu,
-    SelectMenu,
-}
-
-pub enum Commands {
-    Select,
-    Attack,
-    Move,
+#[derive(Debug, Copy, Clone)]
+pub enum MenuData {
+    ChangeMenu { id: usize },
+    SelectUnit { id: u32 },
     EndTurn,
-}
-
-pub enum Select {
-    Unit { id: u32 },
+    Empty,
 }
 
 fn main() {
     let mut game = Game {
-        state: GameState::CommandsMenu,
         units: Vec::new(),
         selected_unit: None,
         selectable: Vec::new(),
-        item_index: 0,
-        item_count: 0,
-        commands_menu: Menu::new("COMMANDS"),
-        select_menu: Menu::new("SELECT"),
+        menus: Vec::new(),
+        menu_changed: true,
+        menu_id: 0,
+        item_id: 0,
+        commands_menu_id: 0,
+        select_menu_id: 0,
     };
+
+    {
+        game.commands_menu_id = game.menus.len();
+        game.menus.push(Menu::new("COMMANDS"));
+
+        game.select_menu_id = game.menus.len();
+        game.menus.push(Menu::new("SELECT"));
+    }
 
     {
         game.units.push(Unit {
