@@ -1,6 +1,8 @@
 pub mod gui;
 pub mod unit;
 
+use std::collections::VecDeque;
+
 use cherry::{
     engine::Engine,
     graphics::colour::Colour,
@@ -8,20 +10,30 @@ use cherry::{
     Cherry,
 };
 
-use gui::menu::{
-    draw_menu,
-    Menu,
+use gui::{
+    menu::{
+        draw_menu,
+        Menu,
+    },
+    messages::draw_messages,
 };
 
 use unit::Unit;
 
+#[derive(Debug, Default)]
 pub struct Game {
     // World
     pub units: Vec<Unit>,
 
     // Data caches
-    pub selected_unit: Option<u32>,
+    pub current_faction_id: u32,
+    pub selected_unit_id: Option<u32>,
+    pub target_unit_id: Option<u32>,
+
     pub selectable: Vec<u32>,
+    pub targetable: Vec<u32>,
+
+    pub messages: VecDeque<String>,
 
     // Menus
     pub menus: Vec<Menu<MenuData>>,
@@ -30,15 +42,24 @@ pub struct Game {
     pub menu_changed: bool,
     pub commands_menu_id: usize,
     pub select_menu_id: usize,
+    pub attack_menu_id: usize,
 }
 
-
 impl Game {
-    pub fn change_menu(&mut self, menu_id: usize) {
-        if self.menu_id != menu_id {
+    fn change_menu(&mut self, menu_id: usize, force_menu_changed: bool) {
+        if self.menu_id != menu_id || force_menu_changed {
             self.menu_id = menu_id;
             self.item_id = 0;
             self.menu_changed = true;
+        }
+    }
+
+    fn record_message(&mut self, message: &str) {
+        self.messages.push_front(String::from(message));
+
+        // Todo: Remove this magic number.
+        while self.messages.len() >= 10 {
+            self.messages.pop_back();
         }
     }
 }
@@ -61,24 +82,61 @@ impl Cherry for Game {
             if self.menu_id == self.commands_menu_id {
                 // Update selectable units.
                 self.selectable.clear();
-    
+
                 for unit in &self.units {
+                    if let Some(id) = self.selected_unit_id {
+                        if unit.id == id {
+                            continue;
+                        }
+                    }
+
                     if unit.faction == 0 && unit.health != 0 {
                         self.selectable.push(unit.id);
+                    }
+                }
+
+                // Update targetable units.
+                self.targetable.clear();
+
+                if let Some(selected_unit_id) = self.selected_unit_id {
+                    let unit = &self.units[selected_unit_id as usize];
+
+                    for target in &self.units {
+                        if target.faction != unit.faction && target.health != 0 {
+                            self.targetable.push(target.id);
+                        }
                     }
                 }
 
                 // Update menu items.
                 let menu = &mut self.menus[self.commands_menu_id];
                 menu.clear();
-                
+
                 if self.selectable.len() != 0 {
-                    menu.add("Select", MenuData::ChangeMenu { id: self.select_menu_id });
+                    menu.add(
+                        "Select",
+                        MenuData::ChangeMenu {
+                            id: self.select_menu_id,
+                        },
+                    );
                 }
 
-                menu.add("End Turn", MenuData::Empty);
+                if self.selected_unit_id.is_some() {
+                    menu.add("Deselect", MenuData::DeselectUnit);
+                }
+
+                if self.targetable.len() != 0 {
+                    menu.add(
+                        "Attack",
+                        MenuData::ChangeMenu {
+                            id: self.attack_menu_id,
+                        },
+                    );
+                }
+
+                menu.add("End Turn", MenuData::EndTurn);
             }
-    
+
             if self.menu_id == self.select_menu_id {
                 // Update menu items.
                 let menu = &mut self.menus[self.select_menu_id];
@@ -89,21 +147,60 @@ impl Cherry for Game {
                     menu.add(&unit.name, MenuData::SelectUnit { id: *id });
                 }
 
-                menu.add("Back", MenuData::ChangeMenu { id: self.commands_menu_id });
+                menu.add(
+                    "Back",
+                    MenuData::ChangeMenu {
+                        id: self.commands_menu_id,
+                    },
+                );
+            }
+
+            if self.menu_id == self.attack_menu_id {
+                // Update menu items.
+                let menu = &mut self.menus[self.attack_menu_id];
+                menu.clear();
+
+                for id in &self.targetable {
+                    let unit = &self.units[*id as usize];
+                    menu.add(
+                        &unit.name,
+                        MenuData::ChangeMenu {
+                            id: self.commands_menu_id,
+                        },
+                    );
+                }
+
+                menu.add(
+                    "Back",
+                    MenuData::ChangeMenu {
+                        id: self.commands_menu_id,
+                    },
+                )
             }
         }
 
         // Draw menu.
         let menu = &self.menus[self.menu_id];
-        draw_menu(engine, 1, 1, &menu, self.item_id);
+        draw_menu(engine, 1, 1, 13, &menu, self.item_id);
+
+        // Draw messages.
+        draw_messages(engine, 18, 1, 20, 13, &self.messages);
 
         // Input.
         if engine.key(Key::Up).just_down {
-            self.item_id = self.item_id.saturating_sub(1);
+            if self.item_id == 0 {
+                self.item_id = menu.len().saturating_sub(1);
+            } else {
+                self.item_id -= 1;
+            }
         }
 
         if engine.key(Key::Down).just_down {
-            self.item_id = (self.item_id + 1).min(menu.len());
+            if self.item_id == menu.len().saturating_sub(1) {
+                self.item_id = 0;
+            } else {
+                self.item_id += 1;
+            }
         }
 
         if engine.key(Key::Enter).just_down {
@@ -111,14 +208,33 @@ impl Cherry for Game {
                 let data = item.data().clone();
                 match data {
                     MenuData::ChangeMenu { id } => {
-                        self.change_menu(id);
+                        self.change_menu(id, false);
                     }
                     MenuData::SelectUnit { id } => {
-                        self.selected_unit = Some(id);
-                        self.change_menu(self.commands_menu_id);
+                        self.selected_unit_id = Some(id);
+                        self.change_menu(self.commands_menu_id, false);
+
+                        let unit = &self.units[id as usize];
+                        let message = format!("Selected {}.", unit.name);
+                        self.record_message(&message);
                     }
-                    MenuData::EndTurn => {}
-                    MenuData::Empty => {}
+                    MenuData::DeselectUnit => {
+                        if let Some(id) = self.selected_unit_id {
+                            let unit = &self.units[id as usize];
+                            let message = format!("Deselected {}.", unit.name);
+
+                            self.selected_unit_id = None;
+                            self.change_menu(self.commands_menu_id, true);
+                            self.record_message(&message);
+                        }
+                    }
+                    MenuData::AttackUnit { id } => {}
+                    MenuData::EndTurn => {
+                        self.record_message("You end the turn.");
+                    }
+                    MenuData::Empty => {
+                        self.record_message("Nothing happens.");
+                    }
                 }
             }
         }
@@ -129,22 +245,14 @@ impl Cherry for Game {
 pub enum MenuData {
     ChangeMenu { id: usize },
     SelectUnit { id: u32 },
+    AttackUnit { id: u32 },
+    DeselectUnit,
     EndTurn,
     Empty,
 }
 
 fn main() {
-    let mut game = Game {
-        units: Vec::new(),
-        selected_unit: None,
-        selectable: Vec::new(),
-        menus: Vec::new(),
-        menu_changed: true,
-        menu_id: 0,
-        item_id: 0,
-        commands_menu_id: 0,
-        select_menu_id: 0,
-    };
+    let mut game = Game::default();
 
     {
         game.commands_menu_id = game.menus.len();
@@ -152,6 +260,11 @@ fn main() {
 
         game.select_menu_id = game.menus.len();
         game.menus.push(Menu::new("SELECT"));
+
+        game.attack_menu_id = game.menus.len();
+        game.menus.push(Menu::new("ATTACK"));
+
+        game.change_menu(game.commands_menu_id, true);
     }
 
     {
@@ -188,6 +301,6 @@ fn main() {
         });
     }
 
-    let mut engine = Engine::new("Foo, Bar, Baz!", 60, 40, "res/fonts/cp437_14x14.png");
+    let mut engine = Engine::new("Foo, Bar, Baz!", 60, 40, "res/fonts/cp437_16x16.png");
     engine.run(&mut game);
 }

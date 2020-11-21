@@ -3,6 +3,7 @@ use cherry::{
     graphics::colour::Colour,
 };
 
+#[derive(Debug)]
 pub struct Menu<T> {
     title: String,
     items: Vec<Item<T>>,
@@ -44,6 +45,7 @@ impl<T> Menu<T> {
     }
 }
 
+#[derive(Debug)]
 pub struct Item<T> {
     text: String,
     data: T,
@@ -59,9 +61,19 @@ impl<T> Item<T> {
     }
 }
 
-pub fn draw_menu<T>(engine: &mut Engine, x: i32, y: i32, menu: &Menu<T>, selection: usize) {
+pub fn draw_menu<T>(
+    engine: &mut Engine,
+    x: i32,
+    y: i32,
+    height: i32,
+    menu: &Menu<T>,
+    selection: usize,
+) {
+    // Setup
+    engine.fill_rect(x, y, 16, height);
+
     // Title
-    engine.set_fg(Colour::VERY_DARK_CYAN);
+    engine.set_fg(Colour::DARK_CYAN);
     engine.draw_str(x, y, menu.title());
 
     // Separator
@@ -84,5 +96,5 @@ pub fn draw_menu<T>(engine: &mut Engine, x: i32, y: i32, menu: &Menu<T>, selecti
     // Separator
     engine.set_fg(Colour::VERY_DARK_GRAY);
     engine.set_bg(Colour::BLACK);
-    engine.draw_h_line(x, y + menu.items().len() as i32 + 2, 16, 0xC4 as char);
+    engine.draw_h_line(x, height - 1, 16, 0xC4 as char);
 }

@@ -180,8 +180,16 @@ impl Engine {
         }
     }
 
+    pub fn get_fg(&self) -> Colour {
+        self.fg
+    }
+
     pub fn set_fg(&mut self, fg: Colour) {
         self.fg = fg;
+    }
+
+    pub fn get_bg(&self) -> Colour {
+        self.bg
     }
 
     pub fn set_bg(&mut self, bg: Colour) {
