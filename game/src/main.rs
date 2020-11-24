@@ -4,10 +4,10 @@ pub mod unit;
 use std::collections::VecDeque;
 
 use cherry::{
-    engine::Engine,
+    engine::Cherry,
     graphics::colour::Colour,
     input::key::Key,
-    Cherry,
+    CherryApp,
 };
 
 use gui::{
@@ -20,7 +20,7 @@ use gui::{
 
 use unit::Unit;
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Game {
     // World
     pub units: Vec<Unit>,
@@ -64,8 +64,8 @@ impl Game {
     }
 }
 
-impl Cherry for Game {
-    fn on_update(&mut self, engine: &mut Engine) {
+impl CherryApp for Game {
+    fn on_update(&mut self, engine: &mut Cherry) {
         // Clear view.
         engine.set_fg(Colour::WHITE);
         engine.set_bg(Colour::BLACK);
@@ -181,10 +181,46 @@ impl Cherry for Game {
 
         // Draw menu.
         let menu = &self.menus[self.menu_id];
-        draw_menu(engine, 1, 1, 13, &menu, self.item_id);
+        draw_menu(engine, 1, 1, 20, 13, &menu, self.item_id);
+
+        if self.menu_id == self.select_menu_id {
+            let menu = &self.menus[self.menu_id];
+            let item = menu.get(self.item_id).unwrap();
+
+            match item.data() {
+                MenuData::SelectUnit { id } => {
+                    let unit = &self.units[*id as usize];
+                    engine.set_fg(Colour::VERY_DARK_CYAN);
+                    engine.draw_str(1, 15, "INFO");
+                    engine.set_fg(Colour::VERY_DARK_GRAY);
+                    engine.draw_border(1, 16, 30, 10);
+
+                    let health_percent = unit.health as f32 / unit.health_max as f32;
+
+                    engine.set_fg(Colour::GRAY);
+                    engine.draw(2, 17, '\u{80}');
+                    engine.set_fg(Colour::DARK_RED);
+                    engine.draw_progress_bar_ex(4, 17, 15, health_percent, 0.5);
+                    engine.draw_str(20, 17, &format!("{}/{}", unit.health, unit.health_max));
+
+                    engine.set_fg(Colour::GRAY);
+                    engine.draw(2, 18, '\u{81}');
+                    engine.set_fg(Colour::DARK_GREEN);
+                    engine.draw_progress_bar_ex(4, 18, 15, 0.8, 0.5);
+                    engine.draw_str(20, 18, "8/10");
+
+                    engine.set_fg(Colour::GRAY);
+                    engine.draw(2, 19, '\u{82}');
+                    engine.set_fg(Colour::DARK_BLUE);
+                    engine.draw_progress_bar_ex(4, 19, 15, 0.2, 0.5);
+                    engine.draw_str(20, 19, "2/10");
+                }
+                _ => {}
+            }
+        }
 
         // Draw messages.
-        draw_messages(engine, 18, 1, 20, 13, &self.messages);
+        draw_messages(engine, 22, 1, 37, 13, &self.messages);
 
         // Input.
         if engine.key(Key::Up).just_down {
@@ -301,6 +337,6 @@ fn main() {
         });
     }
 
-    let mut engine = Engine::new("Foo, Bar, Baz!", 60, 40, "res/fonts/cp437_16x16.png");
+    let mut engine = Cherry::new("Foo, Bar, Baz!", 60, 40, "res/fonts/default.png");
     engine.run(&mut game);
 }

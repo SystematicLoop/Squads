@@ -1,3 +1,4 @@
+pub mod chars;
 pub mod engine;
 pub mod event;
 pub mod graphics;
@@ -5,8 +6,8 @@ pub mod input;
 pub mod terminal;
 pub mod window;
 
-use engine::Engine;
+use engine::Cherry;
 
-pub trait Cherry {
-    fn on_update(&mut self, engine: &mut Engine);
+pub trait CherryApp {
+    fn on_update(&mut self, engine: &mut Cherry);
 }

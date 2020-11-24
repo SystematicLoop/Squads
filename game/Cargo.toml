@@ -8,3 +8,7 @@ edition = "2018"
 
 [dependencies.cherry]
 path = "../cherry"
+
+[dependencies.hecs]
+version = "0.3.1"
+features = ["hecs-macros"]

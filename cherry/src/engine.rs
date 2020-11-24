@@ -1,3 +1,8 @@
+use std::collections::{
+    HashMap,
+    VecDeque,
+};
+
 use blueberry::Vec2f;
 
 use crate::{
@@ -15,11 +20,12 @@ use crate::{
         tile::Tile,
     },
     window::Window,
-    Cherry,
+    CherryApp,
 };
 
-pub struct Engine {
+pub struct Cherry {
     window: Window,
+    events: VecDeque<Event>,
 
     // Graphics
     font: Font,
@@ -38,7 +44,7 @@ pub struct Engine {
     keys_this_frame: [bool; Key::count() + 1],
 }
 
-impl Engine {
+impl Cherry {
     pub fn new(title: &str, columns: u32, rows: u32, font: &str) -> Self {
         let font_sprite = Sprite::load(font).expect("Failed to load font.");
 
@@ -53,6 +59,7 @@ impl Engine {
 
         Self {
             window,
+            events: VecDeque::new(),
             font,
             renderer,
             buffer,
@@ -68,9 +75,13 @@ impl Engine {
         }
     }
 
-    pub fn run(&mut self, client: &mut dyn Cherry) {
+    pub fn run(&mut self, client: &mut dyn CherryApp) {
         let mut running = true;
         while running {
+            //----------------------------------------------------------------
+            // Clear event queue from previous frame.
+            self.events.clear();
+
             //----------------------------------------------------------------
             // Update input state.
             self.buttons_last_frame
@@ -105,6 +116,8 @@ impl Engine {
                         running = false;
                     }
                 }
+
+                self.events.push_back(event);
             }
 
             //----------------------------------------------------------------
@@ -151,6 +164,10 @@ impl Engine {
             just_up,
             held,
         }
+    }
+
+    pub fn poll_event(&mut self) -> Option<Event> {
+        self.events.pop_front()
     }
 
     pub fn key(&self, key: Key) -> KeyState {
@@ -206,7 +223,8 @@ impl Engine {
         }
 
         let index = (x + y * columns) as usize;
-        let tile = &mut self.buffer.get_mut(index).unwrap();
+        let buffer = &mut self.buffer;
+        let tile = &mut buffer.get_mut(index).unwrap();
         tile.glyph = c;
         tile.fg = self.fg;
         tile.bg = self.bg;
@@ -253,6 +271,37 @@ impl Engine {
         for y in y0 + 1..=y1 - 1 {
             self.draw(x0, y, VT);
             self.draw(x1, y, VT);
+        }
+    }
+
+    pub fn draw_progress_bar(&mut self, x: i32, y: i32, w: i32, percent: f32, dimming: f32) {
+        let percent_in_cells = (percent * w as f32).round() as i32;
+        let fg = self.get_fg();
+        
+        self.set_fg(fg * dimming);
+        self.draw_h_line(x, y, w, crate::chars::BLOCK1);
+        self.set_fg(fg);
+        self.draw_h_line(x, y, percent_in_cells, crate::chars::BLOCK2);
+    }
+
+    pub fn draw_progress_bar_ex(&mut self, x: i32, y: i32, w: i32, percent: f32, dimming: f32) {
+        let percent_in_cells = (percent * w as f32).round() as i32;
+        let fg = self.get_fg();
+        
+        self.set_fg(fg * dimming);
+        self.draw_h_line(x, y, w, '\u{84}');
+        self.draw(x, y, '\u{83}');
+        self.draw(x + w, y, '\u{85}');
+        
+        self.set_fg(fg);
+        self.draw_h_line(x, y, percent_in_cells, '\u{87}');
+        
+        if percent_in_cells > 0 {
+            self.draw(x, y, '\u{86}');
+        }
+        
+        if percent_in_cells == w {
+            self.draw(x + w, y, '\u{88}');
         }
     }
 

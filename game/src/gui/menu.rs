@@ -1,5 +1,5 @@
 use cherry::{
-    engine::Engine,
+    engine::Cherry,
     graphics::colour::Colour,
 };
 
@@ -62,15 +62,16 @@ impl<T> Item<T> {
 }
 
 pub fn draw_menu<T>(
-    engine: &mut Engine,
+    engine: &mut Cherry,
     x: i32,
     y: i32,
-    height: i32,
+    w: i32,
+    h: i32,
     menu: &Menu<T>,
     selection: usize,
 ) {
     // Setup
-    engine.fill_rect(x, y, 16, height);
+    engine.fill_rect(x, y, w, h);
 
     // Title
     engine.set_fg(Colour::DARK_CYAN);
@@ -78,23 +79,31 @@ pub fn draw_menu<T>(
 
     // Separator
     engine.set_fg(Colour::VERY_DARK_GRAY);
-    engine.draw_h_line(x, y + 1, 16, 0xC4 as char);
+    engine.draw_h_line(x, y + 1, w, 0xC4 as char);
 
     // Menu items
     for (i, item) in menu.items().iter().enumerate() {
         if i == selection {
             engine.set_fg(Colour::BLACK);
             engine.set_bg(Colour::WHITE);
-            engine.draw_str(x, y + 2 + i as i32, &format!("> {:14}", item.text()));
+            engine.draw_str(
+                x,
+                y + 2 + i as i32,
+                &format!("> {:width$}", item.text(), width = w as usize - 2),
+            );
         } else {
             engine.set_fg(Colour::GRAY);
             engine.set_bg(Colour::BLACK);
-            engine.draw_str(x, y + 2 + i as i32, &format!("  {:14}", item.text()));
+            engine.draw_str(
+                x,
+                y + 2 + i as i32,
+                &format!("  {:width$}", item.text(), width = w as usize - 2),
+            );
         }
     }
 
     // Separator
     engine.set_fg(Colour::VERY_DARK_GRAY);
     engine.set_bg(Colour::BLACK);
-    engine.draw_h_line(x, height - 1, 16, 0xC4 as char);
+    engine.draw_h_line(x, h - 1, w, 0xC4 as char);
 }
