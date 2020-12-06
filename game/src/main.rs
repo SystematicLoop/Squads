@@ -11,6 +11,7 @@ use cherry::{
 };
 
 use gui::{
+    draw_stat,
     menu::{
         draw_menu,
         Menu,
@@ -60,6 +61,12 @@ impl Game {
         // Todo: Remove this magic number.
         while self.messages.len() >= 10 {
             self.messages.pop_back();
+        }
+    }
+
+    fn tick_action_counters(&mut self) {
+        for unit in &mut self.units {
+            if unit.health != 0 {}
         }
     }
 }
@@ -190,30 +197,53 @@ impl CherryApp for Game {
             match item.data() {
                 MenuData::SelectUnit { id } => {
                     let unit = &self.units[*id as usize];
+                    
+                    // Info panel.
                     engine.set_fg(Colour::VERY_DARK_CYAN);
                     engine.draw_str(1, 15, "INFO");
                     engine.set_fg(Colour::VERY_DARK_GRAY);
-                    engine.draw_border(1, 16, 30, 10);
+                    engine.draw_border(1, 16, 26, 14);
 
-                    let health_percent = unit.health as f32 / unit.health_max as f32;
-
-                    engine.set_fg(Colour::GRAY);
-                    engine.draw(2, 17, '\u{80}');
+                    // Health bar.
                     engine.set_fg(Colour::DARK_RED);
-                    engine.draw_progress_bar_ex(4, 17, 15, health_percent, 0.5);
-                    engine.draw_str(20, 17, &format!("{}/{}", unit.health, unit.health_max));
+                    draw_stat(
+                        engine,
+                        2,
+                        17,
+                        10,
+                        "\u{80}:",
+                        unit.health,
+                        unit.health_max,
+                        0,
+                    );
 
-                    engine.set_fg(Colour::GRAY);
-                    engine.draw(2, 18, '\u{81}');
+                    // Armour bar.
                     engine.set_fg(Colour::DARK_GREEN);
-                    engine.draw_progress_bar_ex(4, 18, 15, 0.8, 0.5);
-                    engine.draw_str(20, 18, "8/10");
+                    draw_stat(engine, 2, 19, 10, "\u{81}:", 8, 10, -2);
 
-                    engine.set_fg(Colour::GRAY);
-                    engine.draw(2, 19, '\u{82}');
+                    // Shield bar.
                     engine.set_fg(Colour::DARK_BLUE);
-                    engine.draw_progress_bar_ex(4, 19, 15, 0.2, 0.5);
-                    engine.draw_str(20, 19, "2/10");
+                    draw_stat(engine, 2, 21, 10, "\u{82}:", 2, 10, 0);
+
+                    // Action bar.
+                    engine.set_fg(Colour::new(160, 80, 0));
+                    draw_stat(
+                        engine,
+                        2,
+                        23,
+                        10,
+                        "\u{91}:",
+                        unit.stamina,
+                        100,
+                        unit.speed as i16,
+                    );
+
+                    // Weapon.
+                    engine.set_fg(Colour::YELLOW);
+                    engine.draw_str(2, 25, "M1 Garand");
+                    engine.set_fg(Colour::WHITE);
+                    engine.draw_str(2, 26, "accuracy : 100%");
+                    engine.draw_str(2, 27, "damage   : 30");
                 }
                 _ => {}
             }
@@ -310,6 +340,9 @@ fn main() {
             faction: 0,
             health: 10,
             health_max: 10,
+            stamina: 100,
+            speed: 50,
+            turns: 1,
         });
 
         game.units.push(Unit {
@@ -318,6 +351,9 @@ fn main() {
             faction: 0,
             health: 8,
             health_max: 10,
+            stamina: 100,
+            speed: 50,
+            turns: 1,
         });
 
         game.units.push(Unit {
@@ -326,6 +362,9 @@ fn main() {
             faction: 0,
             health: 0,
             health_max: 10,
+            stamina: 100,
+            speed: 50,
+            turns: 1,
         });
 
         game.units.push(Unit {
@@ -334,6 +373,9 @@ fn main() {
             faction: 1,
             health: 12,
             health_max: 12,
+            stamina: 100,
+            speed: 50,
+            turns: 1,
         });
     }
 

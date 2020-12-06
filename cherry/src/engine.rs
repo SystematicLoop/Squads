@@ -5,29 +5,20 @@ use std::collections::{
 
 use blueberry::Vec2f;
 
-use crate::{
-    event::Event,
-    graphics::colour::Colour,
-    graphics::sprite::Sprite,
-    graphics::{
+use crate::{CherryApp, event::Event, graphics::colour::Colour, graphics::sprite::Sprite, graphics::{
         font::Font,
         opengl::renderer::Renderer,
-    },
-    input::button::Button,
-    input::key::Key,
-    terminal::{
+    }, input::button::Button, graphics::clip::Clip, input::key::Key, terminal::{
         buffer::Buffer,
         tile::Tile,
-    },
-    window::Window,
-    CherryApp,
-};
+    }, window::Window};
 
 pub struct Cherry {
     window: Window,
     events: VecDeque<Event>,
 
     // Graphics
+    clip: Clip,
     font: Font,
     renderer: Renderer,
     buffer: Buffer,
@@ -60,6 +51,7 @@ impl Cherry {
         Self {
             window,
             events: VecDeque::new(),
+            clip: Clip::new(0, 0, buffer.columns() as i32, buffer.rows() as i32, false),
             font,
             renderer,
             buffer,
@@ -213,6 +205,14 @@ impl Cherry {
         self.bg = bg;
     }
 
+    pub fn clip(&mut self, x: i32, y: i32, w: i32, h: i32, invert: bool) {
+        self.clip = Clip::new(x, y, w, h, invert);
+    }
+
+    pub fn unclip(&mut self) {
+        self.clip = Clip::new(0, 0, self.buffer.columns() as i32, self.buffer.rows() as i32, false);
+    }
+
     pub fn draw(&mut self, x: i32, y: i32, c: char) {
         // Check for out-of-bounds.
         let columns = self.buffer.columns() as i32;
@@ -222,6 +222,13 @@ impl Cherry {
             return;
         }
 
+        // Check for out-of-clip.
+        if !self.clip.contains(x, y) {
+            // The coordinates are out-of-clip!
+            return;
+        }
+
+        // Proceed with drawing.
         let index = (x + y * columns) as usize;
         let buffer = &mut self.buffer;
         let tile = &mut buffer.get_mut(index).unwrap();

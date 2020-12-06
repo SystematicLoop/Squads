@@ -5,4 +5,7 @@ pub struct Unit {
     pub faction: u8,
     pub health: u16,
     pub health_max: u16,
+    pub stamina: u16,
+    pub speed: u16,
+    pub turns: u16,
 }
