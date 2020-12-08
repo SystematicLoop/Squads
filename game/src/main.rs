@@ -12,6 +12,7 @@ use cherry::{
 
 use gui::{
     draw_stat,
+    info::draw_unit_info,
     menu::{
         draw_menu,
         Menu,
@@ -64,15 +65,125 @@ impl Game {
         }
     }
 
-    fn tick_action_counters(&mut self) {
-        for unit in &mut self.units {
-            if unit.health != 0 {}
+    fn update_commands_menu(&mut self) {
+        // Update selectable units.
+        self.selectable.clear();
+
+        for unit in &self.units {
+            if let Some(id) = self.selected_unit_id {
+                if unit.id == id {
+                    continue;
+                }
+            }
+
+            if unit.faction == 0 && unit.health != 0 {
+                self.selectable.push(unit.id);
+            }
         }
+
+        // Update targetable units.
+        self.targetable.clear();
+
+        if let Some(selected_unit_id) = self.selected_unit_id {
+            let unit = &self.units[selected_unit_id as usize];
+
+            for target in &self.units {
+                if target.faction != unit.faction && target.health != 0 {
+                    self.targetable.push(target.id);
+                }
+            }
+        }
+
+        // Update menu items.
+        let menu = &mut self.menus[self.commands_menu_id];
+        menu.clear();
+
+        if self.selectable.len() != 0 {
+            menu.add(
+                "Select",
+                MenuData::ChangeMenu {
+                    id: self.select_menu_id,
+                },
+            );
+        }
+
+        if self.selected_unit_id.is_some() {
+            menu.add("Deselect", MenuData::DeselectUnit);
+        }
+
+        if self.targetable.len() != 0 {
+            menu.add(
+                "Attack",
+                MenuData::ChangeMenu {
+                    id: self.attack_menu_id,
+                },
+            );
+        }
+
+        menu.add("End Turn", MenuData::EndTurn);
+    }
+
+    fn update_select_menu(&mut self) {
+        // Update menu items.
+        let menu = &mut self.menus[self.select_menu_id];
+        menu.clear();
+
+        for id in &self.selectable {
+            let unit = &self.units[*id as usize];
+            menu.add(&unit.name, MenuData::SelectUnit { id: *id });
+        }
+
+        menu.add(
+            "Back",
+            MenuData::ChangeMenu {
+                id: self.commands_menu_id,
+            },
+        );
+    }
+
+    fn update_attack_menu(&mut self) {
+        // Update menu items.
+        let menu = &mut self.menus[self.attack_menu_id];
+        menu.clear();
+
+        for id in &self.targetable {
+            let unit = &self.units[*id as usize];
+            menu.add(
+                &unit.name,
+                MenuData::AttackUnit {
+                    id: *id,
+                },
+            );
+        }
+
+        menu.add(
+            "Back",
+            MenuData::ChangeMenu {
+                id: self.commands_menu_id,
+            },
+        )
     }
 }
 
 impl CherryApp for Game {
     fn on_update(&mut self, engine: &mut Cherry) {
+        // Update menu.
+        if self.menu_changed {
+            self.menu_changed = false;
+
+            if self.menu_id == self.commands_menu_id {
+                self.update_commands_menu();
+            }
+
+            if self.menu_id == self.select_menu_id {
+                self.update_select_menu();
+            }
+
+            if self.menu_id == self.attack_menu_id {
+                self.update_attack_menu();
+            }
+        }
+
         // Clear view.
         engine.set_fg(Colour::WHITE);
         engine.set_bg(Colour::BLACK);
@@ -82,113 +193,9 @@ impl CherryApp for Game {
         engine.set_fg(Colour::new(16, 16, 16));
         engine.draw_border(0, 0, 60, 40);
 
-        // Update menu.
-        if self.menu_changed {
-            self.menu_changed = false;
-
-            if self.menu_id == self.commands_menu_id {
-                // Update selectable units.
-                self.selectable.clear();
-
-                for unit in &self.units {
-                    if let Some(id) = self.selected_unit_id {
-                        if unit.id == id {
-                            continue;
-                        }
-                    }
-
-                    if unit.faction == 0 && unit.health != 0 {
-                        self.selectable.push(unit.id);
-                    }
-                }
-
-                // Update targetable units.
-                self.targetable.clear();
-
-                if let Some(selected_unit_id) = self.selected_unit_id {
-                    let unit = &self.units[selected_unit_id as usize];
-
-                    for target in &self.units {
-                        if target.faction != unit.faction && target.health != 0 {
-                            self.targetable.push(target.id);
-                        }
-                    }
-                }
-
-                // Update menu items.
-                let menu = &mut self.menus[self.commands_menu_id];
-                menu.clear();
-
-                if self.selectable.len() != 0 {
-                    menu.add(
-                        "Select",
-                        MenuData::ChangeMenu {
-                            id: self.select_menu_id,
-                        },
-                    );
-                }
-
-                if self.selected_unit_id.is_some() {
-                    menu.add("Deselect", MenuData::DeselectUnit);
-                }
-
-                if self.targetable.len() != 0 {
-                    menu.add(
-                        "Attack",
-                        MenuData::ChangeMenu {
-                            id: self.attack_menu_id,
-                        },
-                    );
-                }
-
-                menu.add("End Turn", MenuData::EndTurn);
-            }
-
-            if self.menu_id == self.select_menu_id {
-                // Update menu items.
-                let menu = &mut self.menus[self.select_menu_id];
-                menu.clear();
-
-                for id in &self.selectable {
-                    let unit = &self.units[*id as usize];
-                    menu.add(&unit.name, MenuData::SelectUnit { id: *id });
-                }
-
-                menu.add(
-                    "Back",
-                    MenuData::ChangeMenu {
-                        id: self.commands_menu_id,
-                    },
-                );
-            }
-
-            if self.menu_id == self.attack_menu_id {
-                // Update menu items.
-                let menu = &mut self.menus[self.attack_menu_id];
-                menu.clear();
-
-                for id in &self.targetable {
-                    let unit = &self.units[*id as usize];
-                    menu.add(
-                        &unit.name,
-                        MenuData::ChangeMenu {
-                            id: self.commands_menu_id,
-                        },
-                    );
-                }
-
-                menu.add(
-                    "Back",
-                    MenuData::ChangeMenu {
-                        id: self.commands_menu_id,
-                    },
-                )
-            }
-        }
-
         // Draw menu.
         let menu = &self.menus[self.menu_id];
-        draw_menu(engine, 1, 1, 20, 13, &menu, self.item_id);
+        draw_menu(engine, 1, 1, 25, 13, &menu, self.item_id);
 
         if self.menu_id == self.select_menu_id {
             let menu = &self.menus[self.menu_id];
@@ -197,60 +204,25 @@ impl CherryApp for Game {
             match item.data() {
                 MenuData::SelectUnit { id } => {
                     let unit = &self.units[*id as usize];
-                    
-                    // Info panel.
-                    engine.set_fg(Colour::VERY_DARK_CYAN);
-                    engine.draw_str(1, 15, "INFO");
-                    engine.set_fg(Colour::VERY_DARK_GRAY);
-                    engine.draw_border(1, 16, 26, 14);
-
-                    // Health bar.
-                    engine.set_fg(Colour::DARK_RED);
-                    draw_stat(
-                        engine,
-                        2,
-                        17,
-                        10,
-                        "\u{80}:",
-                        unit.health,
-                        unit.health_max,
-                        0,
-                    );
-
-                    // Armour bar.
-                    engine.set_fg(Colour::DARK_GREEN);
-                    draw_stat(engine, 2, 19, 10, "\u{81}:", 8, 10, -2);
-
-                    // Shield bar.
-                    engine.set_fg(Colour::DARK_BLUE);
-                    draw_stat(engine, 2, 21, 10, "\u{82}:", 2, 10, 0);
-
-                    // Action bar.
-                    engine.set_fg(Colour::new(160, 80, 0));
-                    draw_stat(
-                        engine,
-                        2,
-                        23,
-                        10,
-                        "\u{91}:",
-                        unit.stamina,
-                        100,
-                        unit.speed as i16,
-                    );
-
-                    // Weapon.
-                    engine.set_fg(Colour::YELLOW);
-                    engine.draw_str(2, 25, "M1 Garand");
-                    engine.set_fg(Colour::WHITE);
-                    engine.draw_str(2, 26, "accuracy : 100%");
-                    engine.draw_str(2, 27, "damage   : 30");
+                    draw_unit_info(engine, &unit, 1, 14, 26, 16);
                 }
                 _ => {}
             }
+        } else if self.menu_id == self.attack_menu_id {
+            let menu = &self.menus[self.menu_id];
+                let item = menu.get(self.item_id).unwrap();
+    
+                match item.data() {
+                    MenuData::AttackUnit { id } => {
+                        let unit = &self.units[*id as usize];
+                        draw_unit_info(engine, &unit, 1, 14, 26, 16);
+                    }
+                    _ => {}
+                }
         }
 
         // Draw messages.
-        draw_messages(engine, 22, 1, 37, 13, &self.messages);
+        draw_messages(engine, 27, 1, 32, 13, &self.messages);
 
         // Input.
         if engine.key(Key::Up).just_down {
@@ -294,7 +266,19 @@ impl CherryApp for Game {
                             self.record_message(&message);
                         }
                     }
-                    MenuData::AttackUnit { id } => {}
+                    MenuData::AttackUnit { id } => {
+                        let unit = &self.units[self.selected_unit_id.unwrap() as usize];
+                        let target_unit = &self.units[id as usize];
+                        let message = format!("{} attacked {}.", unit.name, target_unit.name);
+                        self.record_message(&message);
+
+                        let mut target_unit = &mut self.units[id as usize];
+                        target_unit.health = 0;
+                        let message = format!("{} was killed.", target_unit.name);
+                        self.record_message(&message);
+
+                        self.change_menu(self.commands_menu_id, false);
+                    }
                     MenuData::EndTurn => {
                         self.record_message("You end the turn.");
                     }
@@ -340,9 +324,12 @@ fn main() {
             faction: 0,
             health: 10,
             health_max: 10,
-            stamina: 100,
+            armour: 10,
+            armour_max: 10,
+            shield: 10,
+            shield_max: 10,
+            actions: 100,
             speed: 50,
-            turns: 1,
         });
 
         game.units.push(Unit {
@@ -351,20 +338,26 @@ fn main() {
             faction: 0,
             health: 8,
             health_max: 10,
-            stamina: 100,
+            armour: 0,
+            armour_max: 0,
+            shield: 5,
+            shield_max: 5,
+            actions: 100,
             speed: 50,
-            turns: 1,
         });
 
         game.units.push(Unit {
             id: 2,
             name: String::from("Sue"),
             faction: 0,
-            health: 0,
+            health: 1,
             health_max: 10,
-            stamina: 100,
+            armour: 0,
+            armour_max: 0,
+            shield: 0,
+            shield_max: 0,
+            actions: 100,
             speed: 50,
-            turns: 1,
         });
 
         game.units.push(Unit {
@@ -373,9 +366,12 @@ fn main() {
             faction: 1,
             health: 12,
             health_max: 12,
-            stamina: 100,
+            armour: 0,
+            armour_max: 0,
+            shield: 0,
+            shield_max: 0,
+            actions: 100,
             speed: 50,
-            turns: 1,
         });
     }
 

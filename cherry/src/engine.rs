@@ -1,7 +1,4 @@
-use std::collections::{
-    HashMap,
-    VecDeque,
-};
+use std::collections::VecDeque;
 
 use blueberry::Vec2f;
 
