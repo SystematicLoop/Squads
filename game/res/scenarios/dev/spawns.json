@@ -1,0 +1,26 @@
+[
+    {
+        "unit": "Rifleman",
+        "role": "Fireteam Leader",
+        "faction": "United States",
+        "name": "John"
+    },
+    {
+        "unit": "Rifleman",
+        "role": "Rifleman",
+        "faction": "United States",
+        "name": "Mary"
+    },
+    {
+        "unit": "Rifleman",
+        "role": "Rifleman",
+        "faction": "United States",
+        "name": "Sue"
+    },
+    {
+        "unit": "Rifleman",
+        "role": "Rifleman",
+        "faction": "Germany",
+        "name": "Doe"
+    }
+]

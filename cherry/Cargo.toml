@@ -14,7 +14,7 @@ path = "../blueberry"
 version = "0.14.0"
 
 [dependencies.image]
-version = "0.23.11"
+version = "0.23.12"
 
 [dependencies.sdl2]
 version = "0.34.3"

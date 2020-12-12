@@ -1,0 +1,20 @@
+[
+    {
+        "name": "United States",
+        "allies": [
+            
+        ]
+    },
+    {
+        "name": "Germany",
+        "allies": [
+            "Japan"
+        ]
+    },
+    {
+        "name": "Japan",
+        "allies": [
+            "Germany"
+        ]
+    }
+]

@@ -21,7 +21,7 @@ pub fn draw_unit_info(engine: &mut Cherry, unit: &Unit, x: i32, y: i32, w: i32, 
 
     // Draw exterior frame.
     engine.set_fg(Colour::VERY_DARK_CYAN);
-    engine.draw_str(x, y, "INFO");
+    engine.draw_str(x, y, &unit.name);
     engine.set_fg(Colour::VERY_DARK_GRAY);
     engine.draw_border(x, y + 1, w, h);
 
@@ -35,29 +35,56 @@ pub fn draw_unit_info(engine: &mut Cherry, unit: &Unit, x: i32, y: i32, w: i32, 
 
     // Draw unit role.
     engine.set_fg(Colour::YELLOW);
-    engine.draw_str(x, y, "Rifleman");
+    engine.draw_str(x, y, &unit.role);
 
     // Draw health bar.
     engine.set_fg(Colour::DARK_RED);
-    draw_stat(engine, x, y + 2, 10, "\u{80}:", unit.health, unit.health_max, 0);
+    draw_stat(
+        engine,
+        x,
+        y + 2,
+        10,
+        "\u{80}:",
+        unit.health.val,
+        unit.health.max,
+        0,
+    );
 
     // Draw armour bar.
     engine.set_fg(Colour::DARK_GREEN);
-    draw_stat(engine, x, y + 4, 10, "\u{81}:", unit.armour, unit.armour_max, 0);
+    draw_stat(
+        engine,
+        x,
+        y + 4,
+        10,
+        "\u{81}:",
+        unit.armour.val,
+        unit.armour.max,
+        0,
+    );
 
     // Draw shield bar.
     engine.set_fg(Colour::DARK_BLUE);
-    draw_stat(engine, x, y + 6, 10, "\u{82}:", unit.shield, unit.shield_max, 0);
+    draw_stat(
+        engine,
+        x,
+        y + 6,
+        10,
+        "\u{82}:",
+        unit.shield.val,
+        unit.shield.max,
+        0,
+    );
 
     // Draw action bar.
-    engine.set_fg(Colour::new(160, 80, 0));
+    engine.set_fg(Colour::DARK_MAGENTA);
     draw_stat(
         engine,
         x,
         y + 8,
         10,
         "\u{94}:",
-        unit.actions,
+        unit.stamina,
         100,
         unit.speed as i16,
     );

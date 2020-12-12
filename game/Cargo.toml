@@ -9,6 +9,17 @@ edition = "2018"
 [dependencies.cherry]
 path = "../cherry"
 
+[dependencies.generational-arena]
+version = "0.2.8"
+features = ["serde"]
+
 [dependencies.hecs]
 version = "0.3.1"
 features = ["hecs-macros"]
+
+[dependencies.serde]
+version = "1.0.117"
+features = ["serde_derive"]
+
+[dependencies.serde_json]
+version = "1.0.59"

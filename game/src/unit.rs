@@ -1,16 +1,50 @@
+use crate::gid::Gid;
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+pub struct UnitDef {
+    pub name: String,
+
+    pub health: Stat,
+    pub armour: Stat,
+    pub shield: Stat,
+
+    pub stamina: u16,
+    pub speed: u16,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UnitSpawn {
+    pub unit: String,
+    pub role: String,
+    pub faction: String,
+    pub name: String,
+}
+
 #[derive(Debug)]
 pub struct Unit {
-    pub id: u32,
     pub name: String,
-    pub faction: u8,
-    
-    pub health: u16,
-    pub health_max: u16,
-    pub armour: u16,
-    pub armour_max: u16,
-    pub shield: u16,
-    pub shield_max: u16,
+    pub role: String,
+    pub faction: Gid,
 
-    pub actions: u16,
+    pub health: Stat,
+    pub armour: Stat,
+    pub shield: Stat,
+
+    pub stamina: u16,
     pub speed: u16,
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+pub struct Stat {
+    pub val: u16,
+    pub max: u16,
+    pub resistance: Resistance,
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+pub struct Resistance {
+    pub energy: f32,
+    pub kinetic: f32,
+    pub explosive: f32,
 }

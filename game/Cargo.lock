@@ -216,7 +216,20 @@ name = "game"
 version = "0.1.0"
 dependencies = [
  "cherry",
+ "generational-arena",
  "hecs",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "generational-arena"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e1d3b771574f62d0548cee0ad9057857e9fc25d7a3335f140c84f6acd0bf601"
+dependencies = [
+ "cfg-if 0.1.10",
+ "serde",
 ]
 
 [[package]]
@@ -290,9 +303,9 @@ dependencies = [
 
 [[package]]
 name = "image"
-version = "0.23.11"
+version = "0.23.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4f0a8345b33b082aedec2f4d7d4a926b845cee184cbe78b703413066564431b"
+checksum = "7ce04077ead78e39ae8610ad26216aed811996b043d47beed5090db674f9e9b5"
 dependencies = [
  "bytemuck",
  "byteorder",

@@ -1,3 +1,5 @@
+use crate::Message;
+
 use std::collections::VecDeque;
 
 use cherry::{
@@ -11,7 +13,7 @@ pub fn draw_messages(
     y: i32,
     w: i32,
     h: i32,
-    messages: &VecDeque<String>,
+    messages: &VecDeque<Message>,
 ) {
     // Setup
     engine.fill_rect(x, y, w, h);
@@ -33,16 +35,16 @@ pub fn draw_messages(
         }
 
         let colour = if i == 0 {
-            Colour::DARK_GRAY
+            message.colour
         } else {
-            Colour::VERY_DARK_GRAY * 0.75
+            message.colour * 0.5
         };
 
         engine.set_fg(colour);
         engine.draw_str(
             x,
             y + 2 + i as i32,
-            &message[..(w as usize).min(message.len())],
+            &message.content[..(w as usize).min(message.content.len())],
         );
     }
 

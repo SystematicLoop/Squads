@@ -9,7 +9,7 @@ pub struct Sprite {
 impl Sprite {
     pub fn load(path: &str) -> Result<Self, image::ImageError> {
         let image_buffer = image::open(path)?;
-        let image = image_buffer.to_rgba();
+        let image = image_buffer.to_rgba8();
 
         let width = image.width();
         let height = image.height();
