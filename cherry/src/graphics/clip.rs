@@ -9,13 +9,7 @@ pub struct Clip {
 
 impl Clip {
     pub fn new(x: i32, y: i32, w: i32, h: i32, invert: bool) -> Self {
-        Self {
-            x,
-            y,
-            w,
-            h,
-            invert,
-        }
+        Self { x, y, w, h, invert }
     }
 
     pub fn contains(&self, x: i32, y: i32) -> bool {

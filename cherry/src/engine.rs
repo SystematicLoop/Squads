@@ -2,13 +2,24 @@ use std::collections::VecDeque;
 
 use blueberry::Vec2f;
 
-use crate::{CherryApp, event::Event, graphics::colour::Colour, graphics::sprite::Sprite, graphics::{
+use crate::{
+    event::Event,
+    graphics::clip::Clip,
+    graphics::colour::Colour,
+    graphics::sprite::Sprite,
+    graphics::{
         font::Font,
         opengl::renderer::Renderer,
-    }, input::button::Button, graphics::clip::Clip, input::key::Key, terminal::{
+    },
+    input::button::Button,
+    input::key::Key,
+    terminal::{
         buffer::Buffer,
         tile::Tile,
-    }, window::Window};
+    },
+    window::Window,
+    CherryApp,
+};
 
 pub struct Cherry {
     window: Window,
@@ -178,6 +189,10 @@ impl Cherry {
         self.md
     }
 
+    pub fn mouse_pos(&self) -> (i32, i32) {
+        (self.mx, self.my)
+    }
+
     pub fn clear(&mut self) {
         for tile in self.buffer.data_mut().iter_mut() {
             tile.glyph = ' ';
@@ -202,12 +217,28 @@ impl Cherry {
         self.bg = bg;
     }
 
-    pub fn clip(&mut self, x: i32, y: i32, w: i32, h: i32, invert: bool) {
-        self.clip = Clip::new(x, y, w, h, invert);
+    pub fn flip(&mut self) {
+        let temp = self.fg;
+        self.fg = self.bg;
+        self.bg = temp;
     }
 
-    pub fn unclip(&mut self) {
-        self.clip = Clip::new(0, 0, self.buffer.columns() as i32, self.buffer.rows() as i32, false);
+    pub fn get_clip(&mut self) -> Clip {
+        self.clip
+    }
+
+    pub fn set_clip(&mut self, clip: Option<Clip>) {
+        if let Some(clip) = clip {
+            self.clip = clip;
+        } else {
+            self.clip = Clip::new(
+                0,
+                0,
+                self.buffer.columns() as i32,
+                self.buffer.rows() as i32,
+                false,
+            );
+        }
     }
 
     pub fn draw(&mut self, x: i32, y: i32, c: char) {
@@ -279,33 +310,52 @@ impl Cherry {
     }
 
     pub fn draw_progress_bar(&mut self, x: i32, y: i32, w: i32, percent: f32, dimming: f32) {
-        let percent_in_cells = (percent * w as f32).round() as i32;
-        let fg = self.get_fg();
-        
-        self.set_fg(fg * dimming);
-        self.draw_h_line(x, y, w, crate::chars::BLOCK1);
-        self.set_fg(fg);
-        self.draw_h_line(x, y, percent_in_cells, crate::chars::BLOCK2);
+        self.draw_progress_bar_ex(
+            x,
+            y,
+            w,
+            percent,
+            dimming,
+            crate::chars::BLOCK1,
+            crate::chars::BLOCK1,
+            crate::chars::BLOCK1,
+            crate::chars::BLOCK2,
+            crate::chars::BLOCK2,
+            crate::chars::BLOCK2,
+        );
     }
 
-    pub fn draw_progress_bar_ex(&mut self, x: i32, y: i32, w: i32, percent: f32, dimming: f32) {
+    pub fn draw_progress_bar_ex(
+        &mut self,
+        x: i32,
+        y: i32,
+        w: i32,
+        percent: f32,
+        dimming: f32,
+        left_empty: char,
+        middle_empty: char,
+        right_empty: char,
+        left_full: char,
+        middle_full: char,
+        right_full: char,
+    ) {
         let percent_in_cells = (percent * w as f32).round() as i32;
         let fg = self.get_fg();
-        
+
         self.set_fg(fg * dimming);
-        self.draw_h_line(x, y, w, '\u{84}');
-        self.draw(x, y, '\u{83}');
-        self.draw(x + w, y, '\u{85}');
-        
+        self.draw_h_line(x, y, w, middle_empty);
+        self.draw(x, y, left_empty);
+        self.draw(x + w, y, right_empty);
+
         self.set_fg(fg);
-        self.draw_h_line(x, y, percent_in_cells, '\u{87}');
-        
+        self.draw_h_line(x, y, percent_in_cells, middle_full);
+
         if percent_in_cells > 0 {
-            self.draw(x, y, '\u{86}');
+            self.draw(x, y, left_full);
         }
-        
+
         if percent_in_cells == w {
-            self.draw(x + w, y, '\u{88}');
+            self.draw(x + w, y, right_full);
         }
     }
 

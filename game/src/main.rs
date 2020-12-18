@@ -1,10 +1,15 @@
+#![feature(split_inclusive)]
+
 pub mod commands;
 pub mod faction;
 pub mod gid;
 pub mod gui;
+pub mod icons;
+pub mod logger;
 pub mod scenario;
 pub mod serde;
 pub mod unit;
+pub mod weapon;
 
 use std::collections::{
     HashSet,
@@ -29,7 +34,10 @@ use gid::{
 };
 
 use gui::{
-    info::draw_unit_info,
+    info::{
+        draw_unit_info,
+        draw_weapon_info,
+    },
     menu::{
         draw_menu,
         Menu,
@@ -37,12 +45,20 @@ use gui::{
     messages::draw_messages,
 };
 
+use logger::Logger;
 use scenario::Scenario;
 
 use unit::{
+    Stat,
     Unit,
     UnitDef,
     UnitSpawn,
+};
+
+use weapon::{
+    Ammo,
+    Weapon,
+    WeaponDef,
 };
 
 #[derive(Default)]
@@ -50,6 +66,7 @@ pub struct Game {
     // World
     pub factions: Arena<Faction>,
     pub units: Arena<Unit>,
+    pub weapons: Arena<Weapon>,
 
     // Data caches
     pub current_faction_id: Option<Gid>,
@@ -61,7 +78,7 @@ pub struct Game {
     pub selectable: Vec<Gid>,
     pub targetable: Vec<Gid>,
 
-    pub messages: VecDeque<Message>,
+    pub logger: Logger,
 
     // Menus
     pub menus: Vec<Menu<MenuData>>,
@@ -79,20 +96,6 @@ impl Game {
             self.menu_id = menu_id;
             self.item_id = 0;
             self.menu_changed = true;
-        }
-    }
-
-    pub fn record_message(&mut self, content: &str, colour: Colour) {
-        let message = Message {
-            content: String::from(content),
-            colour,
-        };
-
-        self.messages.push_front(message);
-
-        // Todo: Remove this magic number.
-        while self.messages.len() >= 10 {
-            self.messages.pop_back();
         }
     }
 
@@ -126,7 +129,7 @@ impl Game {
                 let unit = &self.units[selected_unit_id];
 
                 for (target_id, target) in &self.units {
-                    if target.faction != unit.faction && target.health.val != 0 {
+                    if target.faction_id != unit.faction_id && target.health.val != 0 {
                         self.targetable.push(target_id);
                     }
                 }
@@ -141,7 +144,7 @@ impl Game {
             menu.add(
                 "Select",
                 MenuData::ChangeMenu {
-                    id: self.select_menu_id,
+                    menu_id: self.select_menu_id,
                 },
             );
         }
@@ -154,7 +157,7 @@ impl Game {
             menu.add(
                 "Attack",
                 MenuData::ChangeMenu {
-                    id: self.attack_menu_id,
+                    menu_id: self.attack_menu_id,
                 },
             );
         }
@@ -167,15 +170,15 @@ impl Game {
         let menu = &mut self.menus[self.select_menu_id];
         menu.clear();
 
-        for id in &self.selectable {
-            let unit = &self.units[*id];
-            menu.add(&unit.name, MenuData::SelectUnit { id: *id });
+        for unit_id in &self.selectable {
+            let unit = &self.units[*unit_id];
+            menu.add(&unit.name, MenuData::SelectUnit { unit_id: *unit_id });
         }
 
         menu.add(
             "Back",
             MenuData::ChangeMenu {
-                id: self.commands_menu_id,
+                menu_id: self.commands_menu_id,
             },
         );
     }
@@ -185,15 +188,15 @@ impl Game {
         let menu = &mut self.menus[self.attack_menu_id];
         menu.clear();
 
-        for id in &self.targetable {
-            let unit = &self.units[*id];
-            menu.add(&unit.name, MenuData::AttackUnit { id: *id });
+        for target_id in &self.targetable {
+            let target = &self.units[*target_id];
+            menu.add(&target.name, MenuData::AttackUnit { target_id: *target_id });
         }
 
         menu.add(
             "Back",
             MenuData::ChangeMenu {
-                id: self.commands_menu_id,
+                menu_id: self.commands_menu_id,
             },
         )
     }
@@ -236,9 +239,10 @@ impl CherryApp for Game {
             let item = menu.get(self.item_id).unwrap();
 
             match item.data() {
-                MenuData::SelectUnit { id } => {
-                    let unit = &self.units[*id];
-                    draw_unit_info(engine, &unit, 1, 14, 26, 16);
+                MenuData::SelectUnit { unit_id } => {
+                    let unit = self.units.get(*unit_id).unwrap();
+                    draw_unit_info(self, engine, *unit_id, 1, 14, 26, 11);
+                    draw_weapon_info(self, engine, unit.weapon_id, 1, 26, 26, 16);
                 }
                 _ => {}
             }
@@ -247,16 +251,15 @@ impl CherryApp for Game {
             let item = menu.get(self.item_id).unwrap();
 
             match item.data() {
-                MenuData::AttackUnit { id } => {
-                    let unit = &self.units[*id];
-                    draw_unit_info(engine, &unit, 1, 14, 26, 16);
+                MenuData::AttackUnit { target_id } => {
+                    draw_unit_info(self, engine, *target_id, 1, 14, 26, 16);
                 }
                 _ => {}
             }
         }
 
         // Draw messages.
-        draw_messages(engine, 27, 1, 32, 13, &self.messages);
+        draw_messages(engine, 27, 1, 32, 13, &self.logger.messages);
 
         // Input.
         if engine.key(Key::Up).just_down {
@@ -279,17 +282,17 @@ impl CherryApp for Game {
             if let Some(item) = menu.get(self.item_id) {
                 let data = item.data().clone();
                 match data {
-                    MenuData::ChangeMenu { id } => {
-                        self.change_menu(id, true);
+                    MenuData::ChangeMenu { menu_id } => {
+                        self.change_menu(menu_id, true);
                     }
-                    MenuData::SelectUnit { id } => {
-                        commands::select(self, id);
+                    MenuData::SelectUnit { unit_id } => {
+                        commands::select(self, unit_id);
                     }
                     MenuData::DeselectUnit => {
                         commands::deselect(self);
                     }
-                    MenuData::AttackUnit { id } => {
-                        commands::attack(self, id);
+                    MenuData::AttackUnit { target_id } => {
+                        commands::attack(self, target_id);
                     }
                     MenuData::EndTurn => {
                         commands::end_turn(self);
@@ -303,17 +306,11 @@ impl CherryApp for Game {
     }
 }
 
-#[derive(Debug)]
-pub struct Message {
-    pub content: String,
-    pub colour: Colour,
-}
-
 #[derive(Debug, Copy, Clone)]
 pub enum MenuData {
-    ChangeMenu { id: usize },
-    SelectUnit { id: Gid },
-    AttackUnit { id: Gid },
+    ChangeMenu { menu_id: usize },
+    SelectUnit { unit_id: Gid },
+    AttackUnit { target_id: Gid },
     DeselectUnit,
     EndTurn,
     Empty,
@@ -363,6 +360,7 @@ fn main() {
 
     // Load units.
     {
+        let weapon_defs = serde::deserialise_dir::<WeaponDef>("res/scenarios/dev/weapons/");
         let unit_defs = serde::deserialise_dir::<UnitDef>("res/scenarios/dev/units/");
         let spawns = serde::deserialise_file::<Vec<UnitSpawn>>("res/scenarios/dev/spawns.json");
 
@@ -375,6 +373,27 @@ fn main() {
                 .unwrap()
                 .0;
 
+            // Retrieve the weapon definition by name.
+            let weapon_def = weapon_defs
+                .iter()
+                .find(|def| def.name == spawn.weapon)
+                .unwrap();
+
+            // Create the weapon based on the definition.
+            let weapon = Weapon {
+                name: weapon_def.name.clone(),
+                role: weapon_def.role.clone(),
+                ammo: Ammo {
+                    val: weapon_def.ammo,
+                    max: weapon_def.ammo,
+                },
+                accuracy: weapon_def.accuracy,
+                damage: weapon_def.damage,
+            };
+
+            // Insert the weapon into the world.
+            let weapon_id = game.weapons.insert(weapon);
+
             // Retrieve the unit definition by name.
             let unit_def = unit_defs.iter().find(|def| def.name == spawn.unit).unwrap();
 
@@ -382,16 +401,20 @@ fn main() {
             let unit = Unit {
                 name: spawn.name,
                 role: spawn.role,
-                faction: faction_id,
-                health: unit_def.health,
-                armour: unit_def.armour,
-                shield: unit_def.shield,
-                stamina: unit_def.stamina,
+                faction_id,
+                accuracy: unit_def.accuracy,
+                weapon_id,
+                health: Stat::new(unit_def.health),
+                armour: Stat::new(unit_def.armour),
+                shield: Stat::new(unit_def.shield),
+                stamina: Stat::new(unit_def.stamina.min(100)),
                 speed: unit_def.speed,
             };
 
-            // Insert unit into faction's unit table.
+            // Insert the unit into the world.
             let unit_id = game.units.insert(unit);
+
+            // Insert unit into faction's unit table.
             let faction = game.factions.get_mut(faction_id).unwrap();
             faction.units.insert(unit_id);
         }

@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct Colour {
     pub r: u8,
     pub g: u8,
@@ -37,7 +37,6 @@ impl Colour {
     pub const WHITE: Colour = Colour::new(255, 255, 255);
 }
 
-
 impl Mul<f32> for Colour {
     type Output = Self;
 
@@ -45,7 +44,7 @@ impl Mul<f32> for Colour {
         Colour::new(
             (self.r as f32 * rhs).min(255.0).max(0.0) as u8,
             (self.g as f32 * rhs).min(255.0).max(0.0) as u8,
-            (self.b as f32 * rhs).min(255.0).max(0.0) as u8
+            (self.b as f32 * rhs).min(255.0).max(0.0) as u8,
         )
     }
 }

@@ -1,9 +1,8 @@
 use cherry::graphics::colour::Colour;
 
-use crate::{
-    Game,
-    Gid,
-};
+use crate::gid::Gid;
+use crate::logger;
+use crate::Game;
 
 /*
     Selects a unit. If the unit is invalid, the selected unit
@@ -14,8 +13,12 @@ pub fn select(game: &mut Game, unit_id: Gid) {
     if game.units.contains(unit_id) {
         // Record the message.
         let unit = &game.units[unit_id];
-        let message = format!("Selected {}.", unit.name);
-        game.record_message(&message, Colour::DARK_GRAY);
+        game.logger
+            .message()
+            .with("Selected ", logger::colour::TEXT)
+            .with(&unit.name, logger::colour::NAME)
+            .with(".", logger::colour::TEXT)
+            .build();
 
         // Update the selected unit.
         game.selected_unit_id = Some(unit_id);
@@ -35,8 +38,12 @@ pub fn deselect(game: &mut Game) {
         if game.units.contains(unit_id) {
             // Record the message.
             let unit = &game.units[unit_id];
-            let message = format!("Deselected {}.", unit.name);
-            game.record_message(&message, Colour::DARK_GRAY);
+            game.logger
+                .message()
+                .with("Deselected ", logger::colour::TEXT)
+                .with(&unit.name, logger::colour::NAME)
+                .with(".", logger::colour::TEXT)
+                .build();
         }
 
         // Update the selected unit.
@@ -47,30 +54,107 @@ pub fn deselect(game: &mut Game) {
     }
 }
 
+struct FinalDamage {
+    health: u16,
+    armour: u16,
+    shield: u16,
+}
+
+/*
+    Description
+*/
+fn get_final_damage(game: &Game, unit_id: Gid, target_id: Gid) -> FinalDamage {
+    // Retrieve relevant entities.
+    let unit = game.units.get(unit_id).unwrap();
+    let target = game.units.get(target_id).unwrap();
+    let weapon = game.weapons.get(unit.weapon_id).unwrap();
+
+    // Initialise combat data.
+    let mut damage_to_health = 0;
+    let mut damage_to_armour = 0;
+    let mut damage_to_shield = 0;
+    let mut remaining_damage = weapon.damage.base;
+    let mut penetrate_shield = false;
+
+    // Shield layer:
+    // The energy shield will absorb incoming damage. Its integrity
+    // lost is equal to the incoming damage. Any damage greater than
+    // its current integrity carries over into the armour layer.
+    if target.shield.val != 0 {
+        damage_to_shield = target.shield.val.min(remaining_damage);
+        remaining_damage -= damage_to_shield;
+
+        // Check if shield is compromised.
+        if remaining_damage != 0 {
+            penetrate_shield = true;
+        }
+    } else {
+        penetrate_shield = true;
+    }
+
+    // Armour layer:
+    // The armour will reduce incoming damage equal to the ratio
+    // of the maximum armour value to the current armour value.
+    // The durability will also be reduced by the raw incoming damage.
+    if penetrate_shield && target.armour.val != 0 {
+        let armour_coefficient = 1.0 - target.armour.ratio();
+        damage_to_armour = target.armour.val.min(remaining_damage);
+        remaining_damage = (remaining_damage as f32 * armour_coefficient) as u16;
+    }
+
+    // Health layer.
+    if penetrate_shield {
+        damage_to_health = target.health.val.min(remaining_damage);
+    }
+
+    FinalDamage {
+        health: damage_to_health,
+        armour: damage_to_armour,
+        shield: damage_to_shield,
+    }
+}
+
 /*
     Cause the selected unit to attack the given target.
     If either is invalid, combat is canceled.
 */
 pub fn attack(game: &mut Game, target_id: Gid) {
     // Check if there is a selected unit.
-    if let Some(id) = game.selected_unit_id {
+    if let Some(selected_unit_id) = game.selected_unit_id {
         // Check if the id is valid.
-        if game.units.contains(id) {
-            // Record the message.
-            let unit = &game.units[game.selected_unit_id.unwrap()];
-            let target = &game.units[target_id];
-            let message = format!("{} attacked {}.", unit.name, target.name);
-            game.record_message(&message, Colour::DARK_GRAY);
-
+        if game.units.contains(selected_unit_id) {
             // Calculate and deal damage.
-            let mut target = &mut game.units[target_id];
-            target.health.val = 0;
+            let damage = get_final_damage(game, selected_unit_id, target_id);
+            let mut target = game.units.get_mut(target_id).unwrap();
+            target.health.val -= damage.health;
+            target.armour.val -= damage.armour;
+            target.shield.val -= damage.shield;
+
+            // Record the message.
+            let unit = &game.units[selected_unit_id];
+            let target = &game.units[target_id];
+            game.logger
+                .message()
+                .with(&unit.name, logger::colour::NAME)
+                .with(" hit ", logger::colour::TEXT)
+                .with(&target.name, logger::colour::NAME)
+                .with(" for ", logger::colour::TEXT)
+                .with(&format!("{}", damage.health), logger::colour::HEALTH)
+                .with("|", logger::colour::TEXT)
+                .with(&format!("{}", damage.armour), logger::colour::ARMOUR)
+                .with("|", logger::colour::TEXT)
+                .with(&format!("{}", damage.shield), logger::colour::SHIELD)
+                .with(".", logger::colour::TEXT)
+                .build();
 
             // Check if the target is killed.
             if target.health.val == 0 {
                 // Record the message.
-                let message = format!("{} was killed.", target.name);
-                game.record_message(&message, Colour::RED);
+                game.logger
+                    .message()
+                    .with(&target.name, logger::colour::NAME)
+                    .with(" was killed!", logger::colour::TEXT)
+                    .build();
             }
 
             // Return to the commands menu.
@@ -114,8 +198,11 @@ fn prune(game: &mut Game) {
     for faction_id in defeated_factions {
         // Record the message.
         let faction = game.factions.get(faction_id).unwrap();
-        let message = format!("{} was defeated.", faction.name);
-        game.record_message(&message, Colour::RED);
+        game.logger
+            .message()
+            .with(&faction.name, logger::colour::NAME)
+            .with(" was defeated!", logger::colour::TEXT)
+            .build();
 
         // Remove the faction from play.
         game.factions.remove(faction_id);
@@ -137,7 +224,10 @@ fn prune(game: &mut Game) {
 */
 pub fn end_turn(game: &mut Game) {
     // Record the message.
-    game.record_message("You end the turn.", Colour::DARK_GRAY);
+    game.logger
+        .message()
+        .with("You end the turn.", Colour::DARK_GRAY)
+        .build();
 
     // Prune the deceased and defeated.
     prune(game);
@@ -175,5 +265,8 @@ pub fn end_turn(game: &mut Game) {
 */
 pub fn empty(game: &mut Game) {
     // Record the message.
-    game.record_message("Nothing happens.", Colour::DARK_GRAY);
+    game.logger
+        .message()
+        .with("Nothing happens.", logger::colour::TEXT)
+        .build();
 }
