@@ -132,6 +132,9 @@ fn convert_keycode(keycode: SdlKeycode) -> Key {
         SdlKeycode::Down => Key::Down,
         SdlKeycode::Return => Key::Enter,
         SdlKeycode::Backspace => Key::Backspace,
+        SdlKeycode::L => Key::L,
+        SdlKeycode::M => Key::M,
+        SdlKeycode::P => Key::P,
         _ => Key::Unknown,
     }
 }

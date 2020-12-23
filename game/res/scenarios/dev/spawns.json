@@ -1,5 +1,6 @@
 [
     {
+        "area": "Main Street",
         "unit": "Rifleman",
         "role": "Fireteam Leader",
         "faction": "United States",
@@ -7,6 +8,7 @@
         "weapon": "M1 Garand"
     },
     {
+        "area": "Main Street",
         "unit": "Rifleman",
         "role": "Rifleman",
         "faction": "United States",
@@ -14,13 +16,15 @@
         "weapon": "M1 Garand"
     },
     {
+        "area": "Main Street",
         "unit": "Rifleman",
         "role": "Rifleman",
-        "faction": "United States",
+        "faction": "Germany",
         "name": "Sue",
         "weapon": "M1 Garand"
     },
     {
+        "area": "Main Street",
         "unit": "Rifleman",
         "role": "Rifleman",
         "faction": "Germany",

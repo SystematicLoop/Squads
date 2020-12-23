@@ -15,6 +15,7 @@ pub struct UnitDef {
 
 #[derive(Debug, Deserialize)]
 pub struct UnitSpawn {
+    pub area: String,
     pub unit: String,
     pub role: String,
     pub faction: String,
@@ -28,6 +29,7 @@ pub struct Unit {
     pub role: String,
 
     pub faction_id: Gid,
+    pub area_id: Gid,
     pub weapon_id: Gid,
 
     pub health: Stat,
@@ -39,11 +41,11 @@ pub struct Unit {
     pub speed: u16,
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone, Deserialize)]
 pub struct Stat {
-    pub val: u16,
-    pub max: u16,
-    pub change: i16,
+    val: u16,
+    max: u16,
+    change: i16,
 }
 
 impl Stat {
@@ -57,5 +59,39 @@ impl Stat {
 
     pub fn ratio(&self) -> f32 {
         self.val as f32 / self.max as f32
+    }
+
+    pub fn val(&self) -> u16 {
+        self.val
+    }
+
+    pub fn max(&self) -> u16 {
+        self.max
+    }
+
+    pub fn change(&self) -> i16 {
+        self.change
+    }
+
+    pub fn change_by(&mut self, delta: i16) {
+        if delta < 0 {
+            self.val = self.val.saturating_sub((-delta) as u16);
+        } else if delta > 0 {
+            self.val = self.val.saturating_add(delta as u16).min(self.max);
+        }
+
+        if self.change ^ delta < 0 {
+            self.change = delta;
+        } else {
+            self.change += delta;
+        }
+    }
+
+    pub fn clear_change(&mut self) {
+        self.change = 0;
+    }
+
+    pub fn full(&self) -> bool {
+        self.val == self.max
     }
 }

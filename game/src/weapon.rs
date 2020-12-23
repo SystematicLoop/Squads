@@ -6,6 +6,8 @@ pub struct WeaponDef {
     pub role: String,
     pub ammo: u16,
     pub accuracy: f32,
+    pub rolls: u16,
+    pub weight: u16,
     pub damage: Damage,
 }
 
@@ -15,6 +17,8 @@ pub struct Weapon {
     pub role: String,
     pub ammo: Ammo,
     pub accuracy: f32,
+    pub rolls: u16,
+    pub weight: u16,
     pub damage: Damage,
 }
 

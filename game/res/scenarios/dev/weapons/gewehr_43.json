@@ -1,7 +1,0 @@
-{
-    "name": "Gewehr 43",
-    "role": "Rifle",
-    "ammo": 10,
-    "accuracy": 0.75,
-    "damage": { "base": 35, "pierce": 10, "energy": 0, "explosion": 0 }
-}

@@ -5,6 +5,10 @@ pub enum Key {
     Enter,
     Backspace,
 
+    L,
+    M,
+    P,
+
     // Ensure this is the last item
     // in the list.
     Unknown,

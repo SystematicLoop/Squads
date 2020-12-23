@@ -1,0 +1,44 @@
+[
+    ["Bathroom 203", "Hallway 200"],
+    ["Bathroom 301", "Hallway 300"],
+    
+    ["Cafeteria", "Hallway 200"],
+    
+    ["Class 201", "Hallway 200"],
+    
+    ["Class 202", "Hallway 200"],
+    
+    ["Clinic", "Hallway 100"],
+    
+    ["Field", "Hallway 300"],
+    
+    ["Hallway 100", "Clinic"],
+    ["Hallway 100", "Hallway 200"],
+    ["Hallway 100", "Main Street"],
+    ["Hallway 100", "Office"],
+
+    ["Hallway 200", "Bathroom 203"],
+    ["Hallway 200", "Cafeteria"],
+    ["Hallway 200", "Class 201"],
+    ["Hallway 200", "Class 202"],
+    ["Hallway 200", "Language Arts"],
+    ["Hallway 200", "Library"],
+    ["Hallway 200", "Hallway 100"],
+    ["Hallway 200", "Music Room"],
+
+    ["Language Arts", "Hallway 200"],
+    
+    ["Library", "Hallway 200"],
+    
+    ["Main Street", "Office"],
+    ["Main Street", "Parking Lot"],
+    ["Main Street", "Hallway 100"],
+
+    ["Music Room", "Hallway 200"],
+    
+    ["Office", "Hallway 100"],
+    ["Office", "Main Street"],
+    
+    ["Parking Lot", "Hallway 300"],
+    ["Parking Lot", "Main Street"]
+]

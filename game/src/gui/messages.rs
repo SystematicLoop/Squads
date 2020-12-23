@@ -28,7 +28,7 @@ fn organise_messages<'a>(w: i32, h: i32, messages: &'a VecDeque<Message>) -> Vec
     let mut cx = 0;
     let mut cy = 0;
 
-    'outer: for (_id, message) in messages.iter().enumerate() {
+    'outer: for (_id, message) in messages.iter().rev().enumerate() {
         for token in &message.tokens {
             for fragment in token.content.split_inclusive(' ').collect::<Vec<&str>>() {
                 let len = fragment.chars().count() as i32;
@@ -89,22 +89,22 @@ pub fn draw_messages(
     // Clip drawing region to space occupied by info panel.
     engine.set_clip(Some(Clip::new(x, y, w, h, false)));
 
-    // Setup
+    // Setup.
     engine.fill_rect(x, y, w, h);
 
-    // Title
-    engine.set_fg(Colour::VERY_DARK_CYAN);
+    // Title.
+    engine.set_fg(Colour::DARK_CYAN);
     engine.draw_str(x, y, "MESSAGES");
 
-    // Opening separator
+    // Opening separator.
     engine.set_fg(Colour::VERY_DARK_GRAY);
     engine.draw_h_line(x, y + 1, w, 0xC4 as char);
 
-    // Closing separator
+    // Closing separator.
     engine.set_fg(Colour::VERY_DARK_GRAY);
     engine.draw_h_line(x, y + h - 2, w, 0xC4 as char);
 
-    // Messages
+    // Messages.
     let max_messages = h - 4;
     let fragments = organise_messages(w, max_messages, messages);
     for fragment in fragments {

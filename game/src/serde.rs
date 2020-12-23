@@ -1,18 +1,22 @@
+use std::path::Path;
+
 pub use serde::de::Deserialize;
 pub use serde::de::DeserializeOwned;
 
-pub fn deserialise_file<T>(path: &str) -> T
+pub fn deserialise_file<T, P>(path: P) -> T
 where
     T: DeserializeOwned,
+    P: AsRef<Path>,
 {
     let data = std::fs::read_to_string(path).unwrap();
     let item = serde_json::from_str::<T>(&data).unwrap();
     item
 }
 
-pub fn deserialise_dir<T>(path: &str) -> Vec<T>
+pub fn deserialise_dir<T, P>(path: P) -> Vec<T>
 where
     T: DeserializeOwned,
+    P: AsRef<Path>,
 {
     let mut items = Vec::new();
 

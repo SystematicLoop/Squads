@@ -1,7 +1,0 @@
-{
-    "name": "M1 Garand",
-    "role": "Rifle",
-    "ammo": 6,
-    "accuracy": 0.75,
-    "damage": { "base": 35, "pierce": 10, "energy": 0, "explosion": 0 }
-}

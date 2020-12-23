@@ -1,0 +1,74 @@
+[
+    {
+        "area": "Hallway 100",
+        "unit": "Ashton",
+        "role": "Schizophrenic",
+        "faction": "School Shooters",
+        "name": "Ashton",
+        "weapon": "Sawed-Off Shotgun"
+    },
+    {
+        "area": "Parking Lot",
+        "unit": "Cooper",
+        "role": "White Nationalist",
+        "faction": "School Shooters",
+        "name": "Cooper",
+        "weapon": "M1 Carbine"
+    },
+    {
+        "area": "Hallway 200",
+        "unit": "David",
+        "role": "Terrorist",
+        "faction": "School Shooters",
+        "name": "David",
+        "weapon": "Pipe Bomb"
+    },
+    {
+        "area": "Bathroom 301",
+        "unit": "Logan",
+        "role": "Facist Jew",
+        "faction": "School Shooters",
+        "name": "Logan",
+        "weapon": "Mosin Nagant"
+    },
+    {
+        "area": "Bathroom 301",
+        "unit": "Sapphire",
+        "role": "Emo Girl",
+        "faction": "Victims",
+        "name": "Sapphire",
+        "weapon": "Cutting Knife"
+    },
+    {
+        "area": "Language Arts",
+        "unit": "Taco",
+        "role": "Mexican",
+        "faction": "Victims",
+        "name": "Taco",
+        "weapon": "Sharp Pencil"
+    },
+    {
+        "area": "Music Room",
+        "unit": "Mr. Quarters",
+        "role": "Mexican",
+        "faction": "Victims",
+        "name": "Mr. Quarters",
+        "weapon": "Colt .45"
+    },
+    {
+        "area": "Office",
+        "unit": "Dusty Jhons",
+        "role": "Principal",
+        "faction": "Victims",
+        "name": "Dusty Jhons",
+        "weapon": "Fire Extinguisher"
+    },
+    {
+        "area": "Field",
+        "unit": "Coach Chokes",
+        "role": "Coach",
+        "faction": "Victims",
+        "name": "Coach Chokes",
+        "weapon": "10 Pound Weight"
+    }
+]

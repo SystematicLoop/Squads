@@ -1,14 +1,20 @@
+use std::path::{Path, PathBuf};
+
 use super::colour::Colour;
 use blueberry::Grid;
 
 pub struct Sprite {
-    path: String,
+    path: PathBuf,
     grid: Grid<Colour>,
 }
 
 impl Sprite {
-    pub fn load(path: &str) -> Result<Self, image::ImageError> {
-        let image_buffer = image::open(path)?;
+    pub fn load<P>(path: P) -> Result<Self, image::ImageError>
+    where
+        P: AsRef<Path>
+    {
+        let path = PathBuf::from(path.as_ref());
+        let image_buffer = image::open(&path)?;
         let image = image_buffer.to_rgba8();
 
         let width = image.width();
@@ -30,14 +36,14 @@ impl Sprite {
         let grid = Grid::from_slice(&data, width, height);
 
         let sprite = Sprite {
-            path: String::from(path),
+            path,
             grid,
         };
 
         Ok(sprite)
     }
 
-    pub fn path(&self) -> &str {
+    pub fn path(&self) -> &Path {
         &self.path
     }
 

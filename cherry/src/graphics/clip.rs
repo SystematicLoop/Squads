@@ -13,7 +13,7 @@ impl Clip {
     }
 
     pub fn contains(&self, x: i32, y: i32) -> bool {
-        let inside = x >= self.x && x <= self.x + self.w && y >= self.y && y <= self.y + self.h;
+        let inside = x >= self.x && x < self.x + self.w && y >= self.y && y < self.y + self.h;
         (inside && !self.invert) || (!inside && self.invert)
     }
 }

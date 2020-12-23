@@ -1,0 +1,83 @@
+[
+    {
+        "name": "Sawed-Off Shotgun",
+        "role": "Shotgun",
+        "ammo": 2,
+        "accuracy": 0.75,
+        "rolls": 1,
+        "weight": 7,
+        "damage": { "base": 80, "pierce": 0, "energy": 0, "explosion": 0 }
+    },
+    {
+        "name": "M1 Carbine",
+        "role": "Carbine",
+        "ammo": 10,
+        "accuracy": 0.75,
+        "rolls": 5,
+        "weight": 4,
+        "damage": { "base": 40, "pierce": 5, "energy": 0, "explosion": 0 }
+    },
+    {
+        "name": "Pipe Bomb",
+        "role": "Improvised Explosive",
+        "ammo": 1,
+        "accuracy": 0.5,
+        "rolls": 1,
+        "weight": 1,
+        "damage": { "base": 0, "pierce": 0, "energy": 0, "explosion": 100 }
+    },
+    {
+        "name": "Mosin Nagant",
+        "role": "Rifle",
+        "ammo": 5,
+        "accuracy": 0.9,
+        "rolls": 1,
+        "weight": 4,
+        "damage": { "base": 50, "pierce": 50, "energy": 0, "explosion": 0 }
+    },
+    {
+        "name": "Cutting Knife",
+        "role": "Rifle",
+        "ammo": 5,
+        "accuracy": 0.9,
+        "rolls": 1,
+        "weight": 4,
+        "damage": { "base": 50, "pierce": 50, "energy": 0, "explosion": 0 }
+    },
+    {
+        "name": "Sharp Pencil",
+        "role": "Melee",
+        "ammo": 10,
+        "accuracy": 1.0,
+        "rolls": 10,
+        "weight": 0,
+        "damage": { "base": 10, "pierce": 100, "energy": 0, "explosion": 0 }
+    },
+    {
+        "name": "Colt .45",
+        "role": "Pistol",
+        "ammo": 7,
+        "accuracy": 0.75,
+        "rolls": 4,
+        "weight": 2,
+        "damage": { "base": 50, "pierce": 10, "energy": 0, "explosion": 0 }
+    },
+    {
+        "name": "Fire Extinguisher",
+        "role": "Melee",
+        "ammo": 10,
+        "accuracy": 0.5,
+        "rolls": 1,
+        "weight": 4,
+        "damage": { "base": 20, "pierce": 0, "energy": 0, "explosion": 0 }
+    },
+    {
+        "name": "10 Pound Weight",
+        "role": "Melee",
+        "ammo": 2,
+        "accuracy": 1.0,
+        "rolls": 2,
+        "weight": 5,
+        "damage": { "base": 90, "pierce": 10, "energy": 0, "explosion": 0 }
+    }
+]

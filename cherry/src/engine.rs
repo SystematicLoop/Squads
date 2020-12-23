@@ -106,8 +106,8 @@ impl Cherry {
                         self.keys_this_frame[key as usize] = false;
                     }
                     Event::MouseMove { x, y, .. } => {
-                        self.mx = x / 8;
-                        self.my = y / 12;
+                        self.mx = x / self.font.width() as i32;
+                        self.my = y / self.font.height() as i32;
                     }
                     Event::MouseScroll { delta } => {
                         self.md = delta;
@@ -149,6 +149,14 @@ impl Cherry {
 
         // Update font.
         self.font = font;
+    }
+
+    pub fn columns(&self) -> u32 {
+        self.buffer.columns()
+    }
+
+    pub fn rows(&self) -> u32 {
+        self.buffer.rows()
     }
 
     pub fn button(&self, button: Button) -> ButtonState {

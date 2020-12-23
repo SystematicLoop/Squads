@@ -70,6 +70,10 @@ pub fn draw_menu<T>(
     menu: &Menu<T>,
     selection: usize,
 ) {
+    // Cache previous terminal properties.
+    let prev_fg = engine.get_fg();
+    let prev_bg = engine.get_bg();
+
     // Setup
     engine.fill_rect(x, y, w, h);
 
@@ -92,7 +96,7 @@ pub fn draw_menu<T>(
                 &format!("> {:width$}", item.text(), width = w as usize - 2),
             );
         } else {
-            engine.set_fg(Colour::GRAY);
+            engine.set_fg(Colour::WHITE);
             engine.set_bg(Colour::BLACK);
             engine.draw_str(
                 x,
@@ -106,4 +110,8 @@ pub fn draw_menu<T>(
     engine.set_fg(Colour::VERY_DARK_GRAY);
     engine.set_bg(Colour::BLACK);
     engine.draw_h_line(x, h - 1, w, 0xC4 as char);
+
+    // Restore terminal properties.
+    engine.set_fg(prev_fg);
+    engine.set_bg(prev_bg);
 }

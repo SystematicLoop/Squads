@@ -1,0 +1,20 @@
+[
+    {
+        "name": "Gewehr 43",
+        "role": "Rifle",
+        "ammo": 10,
+        "accuracy": 0.8,
+        "rolls": 2,
+        "weight": 5,
+        "damage": { "base": 25, "pierce": 30, "energy": 0, "explosion": 0 }
+    },
+    {
+        "name": "M1 Garand",
+        "role": "Rifle",
+        "ammo": 6,
+        "accuracy": 0.75,
+        "rolls": 3,
+        "weight": 5,
+        "damage": { "base": 35, "pierce": 10, "energy": 0, "explosion": 0 }
+    }
+]

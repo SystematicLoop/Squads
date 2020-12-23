@@ -1,0 +1,83 @@
+[
+    {
+        "name": "Ashton",
+        "accuracy": 1.0,
+        "health": 300,
+        "armour": 0,
+        "shield": 0,
+        "stamina": 100,
+        "speed": 50
+    },
+    {
+        "name": "Cooper",
+        "accuracy": 1.0,
+        "health": 90,
+        "armour": 0,
+        "shield": 0,
+        "stamina": 100,
+        "speed": 100
+    },
+    {
+        "name": "David",
+        "accuracy": 1.0,
+        "health": 100,
+        "armour": 0,
+        "shield": 0,
+        "stamina": 100,
+        "speed": 100
+    },
+    {
+        "name": "Logan",
+        "accuracy": 1.0,
+        "health": 100,
+        "armour": 100,
+        "shield": 0,
+        "stamina": 100,
+        "speed": 100
+    },
+    {
+        "name": "Sapphire",
+        "accuracy": 1.0,
+        "health": 75,
+        "armour": 0,
+        "shield": 100,
+        "stamina": 100,
+        "speed": 100
+    },
+    {
+        "name": "Taco",
+        "accuracy": 0.1,
+        "health": 100,
+        "armour": 0,
+        "shield": 0,
+        "stamina": 100,
+        "speed": 100
+    },
+    {
+        "name": "Mr. Quarters",
+        "accuracy": 1.0,
+        "health": 80,
+        "armour": 0,
+        "shield": 0,
+        "stamina": 100,
+        "speed": 80
+    },
+    {
+        "name": "Dusty Jhons",
+        "accuracy": 0.85,
+        "health": 80,
+        "armour": 0,
+        "shield": 0,
+        "stamina": 100,
+        "speed": 80
+    },
+    {
+        "name": "Coach Chokes",
+        "accuracy": 0.85,
+        "health": 70,
+        "armour": 0,
+        "shield": 0,
+        "stamina": 100,
+        "speed": 100
+    }
+]

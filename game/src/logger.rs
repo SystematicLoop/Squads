@@ -9,6 +9,7 @@ pub mod colour {
     pub const HEALTH: Colour = Colour::DARK_RED;
     pub const ARMOUR: Colour = Colour::DARK_GREEN;
     pub const SHIELD: Colour = Colour::DARK_BLUE;
+    pub const NUMBER: Colour = Colour::GRAY;
 }
 
 #[derive(Debug, Default)]
