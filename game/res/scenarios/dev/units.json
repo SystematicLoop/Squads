@@ -5,7 +5,6 @@
         "health": 100,
         "armour": 70,
         "shield": 0,
-        "stamina": 100,
         "speed": 50
     }
 ]

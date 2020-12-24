@@ -642,7 +642,7 @@ fn main() {
                 health: Stat::new(unit_def.health),
                 armour: Stat::new(unit_def.armour),
                 shield: Stat::new(unit_def.shield),
-                stamina: Stat::new(unit_def.stamina.min(100)),
+                stamina: Stat::new(100),
                 speed: unit_def.speed,
             };
 

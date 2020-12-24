@@ -9,7 +9,6 @@ pub struct UnitDef {
     pub health: u16,
     pub armour: u16,
     pub shield: u16,
-    pub stamina: u16,
     pub speed: u16,
 }
 

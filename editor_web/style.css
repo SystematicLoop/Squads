@@ -1,0 +1,67 @@
+:root {
+    --form-border-color: #a0a0a0;
+
+    --button-foreground-color: #000000;
+    --button-background-color: #efefef;
+    --button-background-hover-color: #e0e0e0;
+    --button-border-color: #a0a0a0;
+
+    --list-item-selected-foreground-color: #ffffff;
+    --list-item-selected-background-color: #00a0a0;
+    --list-item-hover-color: #e0e0e0;
+}
+
+body {
+    font-family: Arial;
+}
+
+button {
+    color: var(--button-foreground-color);
+    cursor: pointer;
+    background-color: var(--button-background-color);
+    border-color: var(--button-border-color);
+    border-radius: 2px;
+    border-style: solid;
+    border-width: 1px;
+    padding: 4px;
+}
+
+button:hover {
+    background-color: var(--button-background-hover-color);
+}
+
+div.container {
+    margin-left: 20%;
+    margin-right: 20%;
+}
+
+div.definitions-label {
+    margin-bottom: 6px;
+}
+
+div.definitions {
+    border-color: var(--form-border-color);
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 4px;
+    overflow-y: scroll;
+    width: 300px;
+    height: 400px;
+}
+
+div.definition-item {
+    cursor: pointer;
+    padding-bottom: 3px;
+    padding-left: 9px;
+    padding-right: 9px;
+    padding-top: 6px;
+    user-select: none;
+}
+
+div.definition-item:first-child {
+    padding-top: 6px;
+}
+
+div.definition-item:hover {
+    background-color: var(--list-item-hover-color);
+}
